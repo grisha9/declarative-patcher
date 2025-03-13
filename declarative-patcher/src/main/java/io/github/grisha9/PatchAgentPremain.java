@@ -17,10 +17,7 @@ public class PatchAgentPremain {
     public static void premain(String args, Instrumentation inst) {
         List<String> inputArguments = ManagementFactory.getRuntimeMXBean().getInputArguments();
 
-        List<String> patchedJarPaths = inputArguments.stream()
-                .filter(arg -> arg.startsWith("-javaagent"))
-                .flatMap(arg -> getJarPaths(arg.substring(arg.indexOf(':') + 1)))
-                .collect(Collectors.toList());
+        List<String> patchedJarPaths = getAgentJarPaths(inputArguments);
         if (patchedJarPaths.isEmpty()) {
             throw new RuntimeException("No agent jars found");
         }
@@ -36,14 +33,21 @@ public class PatchAgentPremain {
         inst.addTransformer(new SparkPatchClassTransformer(classMappings));
     }
 
-    private static Stream<String> getJarPaths(String paths) {
+    static List<String> getAgentJarPaths(List<String> inputArguments) {
+        return inputArguments.stream()
+                .filter(arg -> arg.startsWith("-javaagent"))
+                .flatMap(arg -> getJarPaths(arg.substring(arg.indexOf(':') + 1)))
+                .collect(Collectors.toList());
+    }
+
+    static Stream<String> getJarPaths(String paths) {
         if (paths.contains(File.pathSeparator)) {
             return Arrays.stream(paths.split(File.pathSeparator));
         }
         return Stream.of(paths);
     }
 
-    private static List<String> getPotentialPatchClasses(String jarPath) {
+    static List<String> getPotentialPatchClasses(String jarPath) {
         try (JarFile jarFile = new JarFile(jarPath)) {
             List<String> result = jarFile.stream()
                     .map(ZipEntry::getName)
