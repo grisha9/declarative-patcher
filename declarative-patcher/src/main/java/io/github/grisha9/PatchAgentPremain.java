@@ -7,12 +7,10 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.instrument.Instrumentation;
 import java.lang.management.ManagementFactory;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 
 public class PatchAgentPremain {
@@ -21,7 +19,7 @@ public class PatchAgentPremain {
 
         List<String> patchedJarPaths = inputArguments.stream()
                 .filter(arg -> arg.startsWith("-javaagent"))
-                .map(arg -> arg.substring(arg.indexOf(':') + 1))
+                .flatMap(arg -> getJarPaths(arg.substring(arg.indexOf(':') + 1)))
                 .collect(Collectors.toList());
         if (patchedJarPaths.isEmpty()) {
             throw new RuntimeException("No agent jars found");
@@ -36,6 +34,13 @@ public class PatchAgentPremain {
             throw new RuntimeException("No classes with patch found");
         }
         inst.addTransformer(new SparkPatchClassTransformer(classMappings));
+    }
+
+    private static Stream<String> getJarPaths(String paths) {
+        if (paths.contains(File.pathSeparator)) {
+            return Arrays.stream(paths.split(File.pathSeparator));
+        }
+        return Stream.of(paths);
     }
 
     private static List<String> getPotentialPatchClasses(String jarPath) {
