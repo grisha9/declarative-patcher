@@ -41,6 +41,7 @@ public class SpringContextPatcher {
         //print beans
     }
 
+    //stub for calling original method - registerBeanPostProcessors
     protected void __registerBeanPostProcessors(ConfigurableListableBeanFactory beanFactory) {
     }
 }
