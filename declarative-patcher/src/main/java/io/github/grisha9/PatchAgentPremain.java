@@ -36,7 +36,7 @@ public class PatchAgentPremain {
     static List<String> getAgentJarPaths(List<String> inputArguments) {
         return inputArguments.stream()
                 .filter(arg -> arg.startsWith("-javaagent"))
-                .flatMap(arg -> getJarPaths(arg.substring(arg.indexOf(':') + 1)))
+                .flatMap(arg -> getJarPaths(arg.substring(arg.indexOf(":") + 1)))
                 .collect(Collectors.toList());
     }
 
